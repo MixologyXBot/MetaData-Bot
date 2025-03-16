@@ -48,6 +48,7 @@ from bot.helper.mirror_leech_utils.telegram_uploader import TelegramUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (
     auto_delete_message,
+    delete_message,
     delete_status,
     send_message,
     update_status_message,
@@ -133,7 +134,7 @@ class TaskListener(TaskConfig):
                                     f"Moving files from {self.mid} to {des_id}",
                                 )
                                 for item in await listdir(spath):
-                                    if item.strip().endswith(".aria2", ".!qB"):
+                                    if item.strip().endswith((".aria2", ".!qB")):
                                         continue
                                     item_path = (
                                         f"{self.dir}{self.folder_name}/{item}"
@@ -259,6 +260,10 @@ class TaskListener(TaskConfig):
             self.is_file = await aiopath.isfile(up_path)
             self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
 
+        up_path = await self.remove_www_prefix(up_path)
+        self.is_file = await aiopath.isfile(up_path)
+        self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
+
         if self.screen_shots:
             up_path = await self.generate_screenshots(up_path)
             if self.is_cancelled:
@@ -337,6 +342,7 @@ class TaskListener(TaskConfig):
                 update_status_message(self.message.chat.id),
                 tg.upload(),
             )
+            await delete_message(tg.log_msg)
             del tg
         elif is_gdrive_id(self.up_dest):
             LOGGER.info(f"Gdrive Upload Name: {self.name}")
